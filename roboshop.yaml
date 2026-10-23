@@ -17,4 +17,3 @@
        -  roboshop-common
   loop: "{{ instances }}" 
   register: ec2-output
-  when: action == "create"
