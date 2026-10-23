@@ -3,7 +3,7 @@
   connection: local
   vars:
     instances: ["mongodb", "redis", "mysql", "rabbitmq"]
-    image_id: ami-0055977a6e828a4f4
+    image_id: ami-0220d79f3f480ecf5
     #domain_name: devops90s.shop # replace with your domain
     #action: create
   tasks:
@@ -18,7 +18,7 @@
       - roboshop-common
     loop: "{{ instances }}"
     register: ec2_output
-    
+
   - name: print output
     debug:
       msg: "{{ ec2_output}}"
