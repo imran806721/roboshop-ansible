@@ -18,4 +18,8 @@
       - roboshop-common 
      loop: "{{ instances }}"
      register: ec2-output
-  #when: action == "create" 
+  #when: action == "create"
+
+   - name: print out put
+     debug: 
+       msg: "{{ ec2-output }}"
