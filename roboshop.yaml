@@ -16,6 +16,6 @@
       security_group:
       - "roboshp-{{ item }}"
       - roboshop-common 
-  loop: "{{ instances }}"
-  register: ec2-output
+     loop: "{{ instances }}"
+     register: ec2-output
   #when: action == "create" 
