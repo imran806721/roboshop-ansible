@@ -1,27 +1,63 @@
+# - name: roboshop instances management
+#   hosts: local
+#   connection: local
+#   vars:
+#     instances: ["mongodb", "redis", "mysql", "rabbitmq"]
+#     image_id: ami-0055977a6e828a4f4
+#     #domain_name: devops90s.shop # replace with your domain
+#     action: create
+#   tasks:
+#   - name: create ec2 instances
+#     amazon.aws.ec2_instance:
+#       instance_type: t3.micro
+#       name: "roboshop-{{ item }}"
+#       image_id: "{{ image_id }}"
+#       region: us-east-1
+#       security_groups:
+#       - "roboshop-{{ item }}"
+#       - roboshop-common
+#     loop: "{{ instances }}"
+#     register: ec2_output
+
+#   - name: print output
+#     debug:
+#       msg: "{{ ec2_output}}"
+
+```yaml
 - name: roboshop instances management
   hosts: local
   connection: local
-  vars:
-    instances: ["mongodb", "redis", "mysql", "rabbitmq"]
-    image_id: ami-0055977a6e828a4f4
-    #domain_name: devops90s.shop # replace with your domain
-    action: create
-  tasks:
-  - name: create ec2 instances
-    amazon.aws.ec2_instance:
-      instance_type: t3.micro
-      name: "roboshop-{{ item }}"
-      image_id: "{{ image_id }}"
-      region: us-east-1
-      security_groups:
-      - "roboshop-{{ item }}"
-      - roboshop-common
-    loop: "{{ instances }}"
-    register: ec2_output
+  gather_facts: false
 
-  - name: print output
-    debug:
-      msg: "{{ ec2_output}}"
+  vars:
+    instances:
+      - mongodb
+      - redis
+      - mysql
+      - rabbitmq
+    image_id: ami-0055977a6e828a4f4
+    # domain_name: devops90s.shop
+    instance_action: create
+
+  tasks:
+    - name: Create EC2 instances
+      amazon.aws.ec2_instance:
+        instance_type: t3.micro
+        name: "roboshop-{{ item }}"
+        image_id: "{{ image_id }}"
+        region: us-east-1
+        security_groups:
+          - roboshop-common
+        state: running
+      loop: "{{ instances }}"
+      register: ec2_output
+      when: instance_action == "create"
+
+    - name: Print EC2 instance details
+      ansible.builtin.debug:
+        var: ec2_output
+```
+
 
 # ansible-playbook -i localhost,   -e '{"instances":["mongodb","catalogue","redis","user","cart","mysql","shipping","rabbitmq","payment","frontend"]}'  -e action=destroy roboshop.yaml
 # - name: create ec2 and r53 records
