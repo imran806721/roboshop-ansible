@@ -5,7 +5,6 @@
     instances: [ "mongodb", "redis", "mysql", "rabbitmq" ]
     image_id: ami-0055977a6e828a4f4
     domain_name: devops90s.shop
-    action: create
   tasks: 
    - name: create ec2 instances
      amazon.aws.ec2_instance:
