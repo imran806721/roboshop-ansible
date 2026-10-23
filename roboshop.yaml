@@ -14,6 +14,5 @@
        region: us-east-1
        security_group:
        - "roboshp-{{ item }}"
-       -  roboshop-common
-  loop: "{{ instances }}" 
+       -  roboshop-common 
   register: ec2-output
