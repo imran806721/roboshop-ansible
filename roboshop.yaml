@@ -1,50 +1,117 @@
-- name: roboshop instances management
+# - name: roboshop instances management
+#   hosts: local
+#   connection: local
+#   vars:
+#     instances: ["mongodb", "redis", "mysql", "rabbitmq", "catalogue", "user", "cart", "shipping", "payment", "frontend"]
+#     image_id: ami-0055977a6e828a4f4
+#     domain_name: devops90s.shop # replace with your domain
+#     action: create
+#   tasks:
+#   - name: create ec2 instances
+#     amazon.aws.ec2_instance:
+#       instance_type: t3.micro
+#       name: "roboshop-{{ item }}"
+#       image_id: "{{ image_id }}"
+#       region: us-east-1
+#       security_groups:
+#       - roboshop-common
+#     loop: "{{ instances }}"
+#     register: ec2_output
+#     when: action == "create"
+
+# # - name: print output
+# #   debug:
+# #     msg: "{{ ec2_output }}"
+
+# - name: Create Route53 records
+#   amazon.aws.route53:
+#     state: present
+#     zone: devops90s.shop
+#     record: "{{ item.item }}.devops90s.shop"
+#     type: A
+#     ttl: 1
+#     value: "{{ item.instances[0].private_ip_address }}"
+#     overwrite: true
+#   loop: "{{ ec2_output.results }}"
+#   when: action == "create"
+
+# - name: create r53 record for frontend
+#   amazon.aws.route53:
+#       state: present
+#       zone: "{{ domain_name }}"
+#       record: "{{ domain_name }}" #devops90s.shop
+#       type: A
+#       ttl: 1
+#       value: "{{ item.instances[0].public_ip_address }}"
+#       overwrite: true
+#   loop: "{{ ec2_output.results }}"
+#   when: 
+#     - item.item == "frontend" 
+#     - action == "create"
+
+- name: RoboShop instances management
   hosts: local
   connection: local
+  gather_facts: false
+
   vars:
-    instances: ["mongodb", "redis", "mysql", "rabbitmq", "catalogue", "user", "cart", "shipping", "payment", "frontend"]
+    instances:
+      - mongodb
+      - redis
+      - mysql
+      - rabbitmq
+      - catalogue
+      - user
+      - cart
+      - shipping
+      - payment
+      - frontend
+
     image_id: ami-0055977a6e828a4f4
-    domain_name: devops90s.shop # replace with your domain
+    domain_name: devops90s.shop
     action: create
+    instance_type: t3.micro
+    region: us-east-1
+
   tasks:
-  - name: create ec2 instances
-    amazon.aws.ec2_instance:
-      instance_type: t3.micro
-      name: "roboshop-{{ item }}"
-      image_id: "{{ image_id }}"
-      region: us-east-1
-      security_groups:
-      - roboshop-common
-    loop: "{{ instances }}"
-    register: ec2_output
-    when: action == "create"
 
-# - name: print output
-#   debug:
-#     msg: "{{ ec2_output }}"
+    - name: Create EC2 instances
+      amazon.aws.ec2_instance:
+        name: "roboshop-{{ item }}"
+        image_id: "{{ image_id }}"
+        instance_type: "{{ instance_type }}"
+        region: "{{ region }}"
+        security_groups:
+          - roboshop-common
+        state: running
+        wait: true
+      loop: "{{ instances }}"
+      register: ec2_output
+      when: action == "create"
 
-- name: Create Route53 records
-  amazon.aws.route53:
-    state: present
-    zone: devops90s.shop
-    record: "{{ item.item }}.devops90s.shop"
-    type: A
-    ttl: 1
-    value: "{{ item.instances[0].private_ip_address }}"
-    overwrite: true
-  loop: "{{ ec2_output.results }}"
-  when: action == "create"
+    - name: Create Route53 records for backend instances
+      amazon.aws.route53:
+        state: present
+        zone: "{{ domain_name }}"
+        record: "{{ item.item }}.{{ domain_name }}"
+        type: A
+        ttl: 1
+        value: "{{ item.instances[0].private_ip_address }}"
+        overwrite: true
+      loop: "{{ ec2_output.results | default([]) }}"
+      when:
+        - action == "create"
 
-- name: create r53 record for frontend
-  amazon.aws.route53:
-      state: present
-      zone: "{{ domain_name }}"
-      record: "{{ domain_name }}" #devops90s.shop
-      type: A
-      ttl: 1
-      value: "{{ item.instances[0].public_ip_address }}"
-      overwrite: true
-  loop: "{{ ec2_output.results }}"
-  when: 
-    - item.item == "frontend" 
-    - action == "create"
+    - name: Create Route53 record for frontend
+      amazon.aws.route53:
+        state: present
+        zone: "{{ domain_name }}"
+        record: "{{ domain_name }}"
+        type: A
+        ttl: 1
+        value: "{{ item.instances[0].public_ip_address }}"
+        overwrite: true
+      loop: "{{ ec2_output.results | default([]) }}"
+      when:
+        - action == "create"
+
