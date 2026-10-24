@@ -21,7 +21,7 @@
 
 - name: print output
   debug:
-   msg: "{{ ec2_output }}"
+    msg: "{{ ec2_output }}"
 
 - name: create route53 record
   debug:
